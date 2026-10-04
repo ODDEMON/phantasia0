@@ -1,0 +1,18 @@
+{
+  "name": "phantasia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "幻象馆 · PHANTASIA —— 一个离线网页，同时也是一部高互动长流程网页视觉小说。无构建、无依赖、无后端。",
+  "license": "MIT",
+  "author": "ODDEMON",
+  "scripts": {
+    "test": "node test/smoke.mjs",
+    "test:core": "node test/smoke.mjs core",
+    "test:flow": "node test/smoke.mjs flow",
+    "test:tone": "node test/smoke.mjs tone",
+    "test:read": "node test/smoke.mjs read"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

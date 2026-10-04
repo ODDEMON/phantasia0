@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>场 · 取景</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  /* 取景页只借场，不要字 */
+  html,body{overflow:hidden}
+  #stage{position:fixed;inset:0}
+  #tag{position:fixed;left:14px;bottom:12px;z-index:99;font-family:var(--mono);
+       font-size:11px;letter-spacing:.24em;color:var(--dim)}
+</style>
+</head>
+<body data-world="interval">
+<div id="stage"><div id="scene"></div></div>
+<div id="tag"></div>
+<script src="../core/util.js"></script>
+<script src="../core/palette.js"></script>
+<script src="../core/cue.js"></script>
+<script src="../core/field.js"></script>
+<script>
+(function () {
+  var q = {};
+  (location.search || '').replace(/^\?/, '').split('&').forEach(function (kv) {
+    if (!kv) return; var p = kv.split('='); q[p[0]] = decodeURIComponent(p[1] || '');
+  });
+  var w = q.w || 'interval', m = q.m || 'verge', b = parseInt(q.b || '8', 10), j = parseInt(q.j || '3', 10);
+  UA.palette.set(w);
+  document.documentElement.style.setProperty('--px', q.px || '.5');
+  document.documentElement.style.setProperty('--py', q.py || '.52');
+  document.documentElement.style.setProperty('--win', '.20');
+  document.documentElement.style.setProperty('--idle', '0');
+  UA.field.mount(document.getElementById('scene'));
+  UA.field.setBits(b);
+  UA.field.setMotif(m, j);
+  var SAMPLE = { ring: '一圈一圈地绕', line: '那条线很直', beam: '一道竖着的轴',
+    tower: '塔与柱立着', fall: '雨落下来', crack: '那道缝裂开', gaze: '看着它',
+    grid: '格子与点', void: '空空的一片', flood: '水漫过来', glyph: '写下那个名字',
+    path: '沿着路走', band: '一层层横带', count: '数一数量一量' };
+  if (q.cue) UA.field.cue(SAMPLE[q.cue] || q.cue, 'n');
+  document.getElementById('tag').textContent = w + ' · ' + m + ' · ' + b + ' 位' + (q.cue ? ' · 提示 ' + q.cue : '');
+})();
+</script>
+</body>
+</html>
