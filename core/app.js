@@ -274,7 +274,7 @@ window.UA = window.UA || {};
       '<div id="card"></div>' +
       '<div id="hud"><div id="depth"></div><div id="hair"><i></i></div></div>' +
       '<div id="whisper"></div>' +
-      '<div id="text"><div id="log"></div><div id="slot"></div></div>';
+      '<div id="float"><div id="now"></div><div id="slot"></div></div>';
     UA.field.mount($('scene'));
     UA.field.setBits(UA.bus.state.bits || 8);
     setWorld(UA.bus.state.world || 'interval');
@@ -488,47 +488,48 @@ window.UA = window.UA || {};
 
   /* ---- 一句话 ---- */
 
-  var VOICE_NAME = { n: '', y: '这位', m: '摩尔纹', sys: '场' };
+  /* 说话人隐性区分：倾角 · 横移 · 一点色温。
+     不挂名，不落框——前语言的姿态里，谁在知觉只由姿态透出。 */
+  var SPK = {
+    n:   { tilt:  .12, dx:   0, ink: 'var(--fg)'   },
+    m:   { tilt:  .42, dx: -16, ink: 'var(--acc)'  },
+    y:   { tilt: -.22, dx:  20, ink: 'var(--fg)'   },
+    sys: { tilt:  .04, dx:   0, ink: 'var(--dim)'  },
+    h:   { tilt: -.38, dx:  16, ink: 'var(--ink-h)' },
+    g:   { tilt:  .34, dx: -20, ink: 'var(--ink-g)' }
+  };
 
-  /* 小字走专用的窗：摩尔纹一格，场一格。
-     字越小越需要一个能托住它的东西，不然它会被场吃掉。 */
+  /* 一句一句，正中悬浮；上一句先散，这一句才落。 */
   function speak(b) {
-    var log = $('log');
+    var now = $('now');
+    if (!now) return;
+    /* 正中只留一句：上一句先散，更早的残留一概清掉。
+       先前取的是 firstChild，快速落字时会一直摘同一个最老的那句，
+       于是越堆越多——正中便不再是正中。 */
+    var prev = now.lastChild;
+    while (now.children.length > 1) now.removeChild(now.firstChild);
+    if (prev) {
+      prev.classList.add('gone');
+      setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); }, 1000);
+    }
     var div = document.createElement('div');
-    var boxed = (b.s === 'm' || b.s === 'sys');
-    var plain = String(b.t || '').replace(/[\s，。、；：？！「」『』（）—…·,.;:?!()"']/g, '');
 
-    /* 短句推亮一格：像有人拿手指按住这一行。
-       连着两句都推，就没有「被按住」的感觉。 */
-    var isKey = !boxed && !lastKey && plain.length > 0 && plain.length <= 10;
+    var plain = String(b.t || '').replace(/[\s，。、；：？！「」『』（）—…·,.;:?!()"']/g, '');
+    var isKey = b.s !== 'sys' && !lastKey && plain.length > 0 && plain.length <= 10;
     lastKey = isKey;
 
-    div.className = 'ln ' + (boxed ? 'box ' : '') + b.s + (isKey ? ' key' : '');
+    div.className = 'ln ' + b.s + (isKey ? ' key' : '');
 
-    /* 每一行给一点微差：倾角与缩进，幅度由当前量程那一档定。
-       同一卷里不许有两行贴得一模一样。 */
+    var sp = SPK[b.s] || SPK.n;
     var rr = Math.random();
-    div.style.setProperty('--tl', (curTilt * (rr * 2 - 1)).toFixed(3) + 'deg');
-    div.style.setProperty('--ind', (boxed ? 0 : Math.round(rr * 13)) + 'px');
+    div.style.setProperty('--tl', (sp.tilt + curTilt * 0.4 + (rr * 2 - 1) * 0.05).toFixed(3) + 'deg');
+    div.style.setProperty('--dx', (sp.dx + Math.round(rr * 10 - 5)) + 'px');
+    div.style.setProperty('--ink', sp.ink);
 
-    /* 这一句在讲什么，先交给场。
-       场据此把对应的那一层推上去——于是背景与文字对上了。 */
     if (UA.field.cue) UA.field.cue(b.t, b.s);
 
-    log.appendChild(div);
-    while (log.children.length > 5) log.removeChild(log.firstChild);
-    var kids = log.children;
-    for (var i = 0; i < kids.length; i++) kids[i].classList.toggle('old', i < kids.length - 1);
-    if (boxed) {
-      div.innerHTML =
-        '<span class="tag">' + esc(VOICE_NAME[b.s]) + '</span>' +
-        '<span class="txt"></span>' +
-        '<span class="tick a"></span><span class="tick b"></span><span class="tick c"></span><span class="tick d"></span>' +
-        '<span class="rail"></span>';
-      typeInto(div.querySelector('.txt'), b.t, b.s);
-    } else {
-      typeInto(div, b.t, b.s);
-    }
+    now.appendChild(div);
+    typeInto(div, b.t, b.s);
   }
 
   /* 一句话并非「打」出来的，是一个字一个字「落」下来的。
@@ -692,7 +693,7 @@ window.UA = window.UA || {};
     $('stage').innerHTML =
       '<div id="scene"></div><div id="veil"></div><div id="card"></div>' +
       '<div id="hud"><div id="depth"></div><div id="hair"><i></i></div></div>' +
-      '<div id="whisper"></div><div id="text"><div id="log"></div><div id="slot"></div></div>';
+      '<div id="whisper"></div><div id="float"><div id="now"></div><div id="slot"></div></div>';
     UA.field.mount($('cv'));
     bindStage();
     paintDepth();

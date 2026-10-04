@@ -189,7 +189,7 @@ async function testScript() {
     if (b.choice) { choices++; ok(b.choice.length >= 2, '选择至少两条'); }
     if (b.input) inputs++;
     if (b.title) titles++;
-    if (b.s) ok(['n', 'y', 'm', 'sys'].indexOf(b.s) >= 0, '声音 ' + b.s + ' 在册');
+    if (b.s) ok(['n', 'y', 'm', 'sys', 'h', 'g'].indexOf(b.s) >= 0, '声音 ' + b.s + ' 在册');
   });
   ok(choices >= 8, '至少八次选择（' + choices + '）');
   ok(titles >= 2, '至少两张卷首卡（' + titles + '）');
@@ -578,18 +578,16 @@ async function testRender() {
   UA.app.setCue('', 'n');
   eq(sc.getAttribute('data-cue'), '', '寻常一句不硬套提示');
 
-  /* 小字走专用的窗 */
-  const boxes = doc.querySelectorAll('#log .ln.box');
-  ok(boxes.length >= 1, '小字真的有了自己的窗（' + boxes.length + ' 个）');
-  if (boxes.length) {
-    const b0x = boxes[0];
-    ok(!!b0x.querySelector('.txt'), '窗里有正文字');
-    ok(!!b0x.querySelector('.tag'), '窗上挂着说话的那一位');
-    ok(!!b0x.querySelector('.tick.a') && !!b0x.querySelector('.tick.d'), '窗的四角有记号');
-    ok(!!b0x.querySelector('.rail'), '窗底下有一条细轨');
-  }
-  const plain = doc.querySelectorAll('#log .ln.n, #log .ln.y');
-  ok(plain.length >= 1, '叙述那句仍然不套窗');
+  /* 中央悬浮：文字不落框，只以姿态浮在正中 */
+  ok(!!doc.getElementById('now'), '中央悬浮的容器在（#now）');
+  ok(doc.querySelectorAll('#now .ln').length >= 1, '正文浮在正中');
+  const anyLn = doc.querySelector('#now .ln');
+  ok(!!anyLn && anyLn.style.getPropertyValue('--tl').length > 0, '每一行有自己的倾角');
+  ok(!!anyLn && anyLn.style.getPropertyValue('--ink').length > 0, '每一行有自己的墨色');
+  ok(doc.querySelectorAll('#now .ln.box').length === 0, '对话框已经撤掉（不落框）');
+  ok(!!doc.querySelector('#now .ln .lb'), '浮出的那一行裹着一层壳');
+  const narr = doc.querySelectorAll('#now .ln.n, #now .ln.y');
+  ok(narr.length >= 1, '叙述那句也以同等姿态浮出');
 
   /* 光标：它得是一盏灯，不是一条线 */
   const ring = doc.getElementById('ring');
@@ -625,7 +623,7 @@ async function testRender() {
   UA.app.setWorld('interval');
 
   /* 逐行微差：每一行有自己的倾角 */
-  const l1 = doc.querySelector('#log .ln');
+  const l1 = doc.querySelector('#now .ln');
   ok(!!l1 && !!l1.style.getPropertyValue('--tl'), '每一行有自己的倾角');
 
   /* 逐字切分：短句切，长句不切 */
@@ -644,7 +642,7 @@ async function testRender() {
   UA.app.glyphize(longOne, longText);
   ok(longOne.querySelector('.ch') === null, '超长句不摊（逐字元素一多，滚字会拖）');
   ok(!!longOne.querySelector('.caret'), '不摊的那一句也挂着记号');
-  const doneLn = doc.querySelector('#log .ln.done');
+  const doneLn = doc.querySelector('#now .ln.done');
   ok(!!doneLn, '落完的句子挂上了 done');
 
   /* 静一点：形留着，动的那部分熄掉 */
